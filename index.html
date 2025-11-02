@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Tiffin Service - Weekly Menu (Google Sheets Integrated)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('https://i.postimg.cc/zBwzbgYh/panchgani.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:5px;
+            position:relative;
+        }
+        body::before {
+            content:'';
+            position:absolute;
+            top:0; left:0; right:0; bottom:0;
+            background: linear-gradient(135deg, rgba(139,69,19,0.6), rgba(160,82,45,0.7)); /* Gradient overlay for depth */
+            z-index:-1;
+        }
+
+        .container {
+            width:100%;
+            max-width:1000px;
+            background: rgba(255,248,220,0.95); /* Warmer ivory with higher opacity */
+            border-radius:20px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.5); /* Enhanced depth */
+            overflow:hidden;
+            display:flex;
+            flex-direction:column;
+            height:95vh;
+            backdrop-filter: blur(15px); /* Stronger blur */
+            border:2px solid rgba(218,165,32,0.6); /* Thicker gold border */
+        }
+
+        header {
+            background: linear-gradient(135deg, #DEB887 0%, #F5DEB3 50%, #DAA520 100%); /* Warmer tan to gold */
+            color:#8B4513; /* Darker saddle brown */
+            padding:15px;
+            text-align:center;
+            position:relative;
+            box-shadow:0 4px 15px rgba(218,165,32,0.4); /* Enhanced gold shadow */
+        }
+
+        .logo { 
+            font-size:20px; 
+            font-weight:700; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            gap:10px; 
+            letter-spacing:0.5px; 
+            font-family: 'Playfair Display', serif; /* Elegant serif for logo */
+        }
+        .logo i { font-size:24px; color:#DAA520; animation: iconFloat 3s ease-in-out infinite; } /* Subtle float animation */
+        @keyframes iconFloat { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+
+        .header-actions { display:flex; justify-content:center; gap:12px; margin-top:12px; align-items:center; flex-wrap:wrap; }
+
+        .name-input-container {
+            padding:12px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            gap:10px;
+            background: rgba(255,248,220,0.85); /* Warmer background */
+            border-radius:12px;
+            margin-top:12px;
+            backdrop-filter: blur(5px);
+            border:1px solid rgba(218,165,32,0.5); /* Stronger gold */
+        }
+        .name-input-container label { font-size:15px; font-weight:600; white-space:nowrap; color:#8B4513; }
+        #customer-name { 
+            padding:8px 14px; 
+            border:1px solid #DEB887; /* Warmer border */
+            border-radius:8px; 
+            font-size:15px; 
+            min-width:160px; 
+            background:rgba(255,248,220,0.95); 
+            transition:all 0.3s; 
+            font-family: 'Inter', sans-serif;
+        }
+        #customer-name:focus { 
+            outline:none; 
+            border-color:#DAA520; 
+            box-shadow:0 0 0 3px rgba(218,165,32,0.25), 0 0 20px rgba(218,165,32,0.1); /* Glow effect */
+        }
+
+        .view-db-btn {
+            padding:10px 18px;
+            background: linear-gradient(135deg, #F5DEB3 0%, #DEB887 100%); /* Warmer champagne */
+            color:#8B4513; 
+            border:none; 
+            border-radius:8px; 
+            cursor:pointer; 
+            font-size:14px; 
+            font-weight:600;
+            transition:all 0.4s ease; 
+            text-decoration:none; 
+            display:inline-flex; 
+            align-items:center; 
+            gap:8px;
+            box-shadow:0 4px 15px rgba(218,165,32,0.3);
+            border:1px solid rgba(218,165,32,0.3);
+            font-family: 'Inter', sans-serif;
+        }
+        .view-db-btn:hover { 
+            background: linear-gradient(135deg, #DEB887 0%, #B8860B 100%); 
+            transform:translateY(-2px) scale(1.02); 
+            box-shadow:0 6px 20px rgba(218,165,32,0.5); 
+            color:#654321; 
+        }
+
+        .days-tabs { 
+            display:flex; 
+            background: linear-gradient(135deg, #FFF8DC 0%, #E6E6FA 100%); /* Lighter lavender tint for variety */
+            overflow-x:auto; 
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .day-tab {
+            flex:1; 
+            min-width:70px; 
+            padding:12px 8px; 
+            text-align:center; 
+            color:#8B4513; 
+            cursor:pointer; 
+            transition:all 0.4s ease;
+            border:none; 
+            background:transparent; 
+            font-weight:600; 
+            font-size:13px; 
+            position:relative;
+            overflow:hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        .day-tab::before { 
+            content:''; 
+            position:absolute; 
+            bottom:0; 
+            left:0; 
+            right:0; 
+            height:3px; 
+            background:linear-gradient(90deg, #DAA520, #FFD700, #B8860B); /* Gold gradients */
+            transform:scaleX(0); 
+            transition:transform 0.4s ease; 
+        }
+        .day-tab:hover { 
+            color:#654321; 
+            transform:translateY(-1px); 
+            background: rgba(245,222,179,0.2);
+        }
+        .day-tab:hover::before { transform:scaleX(1); }
+        .day-tab.active { 
+            color:#8B4513; 
+            background:rgba(245,222,179,0.5); /* Enhanced wheat */
+        }
+        .day-tab.active::before { transform:scaleX(1); }
+
+        .content-area { flex:1; overflow:hidden; display:flex; flex-direction:column; position: relative; }
+        .day-content { padding:20px; overflow-y:auto; height:100%; display:none; position: relative; }
+        .day-content.active { display:block; animation:fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+        /* Video backgrounds for entire day content - subtle day/night distinction via sections */
+        .day-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            opacity: 0.06; /* Slightly more visible */
+        }
+        .day-content video.day-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+
+        .day-title { 
+            text-align:center; 
+            color:#8B4513; 
+            margin-bottom:20px; 
+            font-size:24px; 
+            position:relative; 
+            padding-bottom:10px; 
+            font-weight:700; 
+            letter-spacing:0.5px; 
+            background:linear-gradient(135deg, #DAA520, #F5DEB3, #DEB887); /* Warmer gold to tan */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            z-index: 2;
+            font-family: 'Playfair Display', serif; /* Serif for titles */
+        }
+        .day-title::after { 
+            content:''; 
+            position:absolute; 
+            bottom:0; 
+            left:50%; 
+            transform:translateX(-50%); 
+            width:80px; 
+            height:3px; 
+            background:linear-gradient(90deg, #DAA520, #FFD700, #B8860B); /* Gold */
+            border-radius:2px; 
+        }
+
+        .meal-section { 
+            margin-bottom:25px; 
+            background:rgba(255,248,220,0.95); /* Warmer, more opaque */
+            border-radius:20px; 
+            overflow:visible; /* Allow video overflow */
+            box-shadow:0 12px 35px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.7); /* Enhanced shadows */
+            backdrop-filter: blur(10px); 
+            border:1px solid rgba(218,165,32,0.4); /* Gold border */
+            transition:all 0.4s ease; 
+            position:relative;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+        .meal-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #DAA520, #FFD700, #B8860B, #CD853F); /* Gold to dark gold */
+            z-index: 3;
+        }
+
+        /* Enhanced video for meal sections - higher opacity for day/night feel */
+        .meal-section.lunch::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: rgba(255, 248, 220, 0.2); /* Warmer ivory tint */
+        }
+        .meal-section.lunch video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            opacity: 0.2; /* More visible for day feel */
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .meal-section.dinner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: rgba(245, 222, 179, 0.2); /* Warmer champagne tint */
+        }
+        .meal-section.dinner video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            opacity: 0.2; /* More visible for night feel */
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .meal-section:hover { 
+            transform:translateY(-5px) scale(1.02); /* Slight scale for premium feel */
+            box-shadow:0 18px 45px rgba(0,0,0,0.25); /* Deeper hover shadow */
+        }
+
+        .meal-header { 
+            background: linear-gradient(135deg, #F5DEB3 0%, #DEB887 100%); /* Warmer champagne */
+            color:#8B4513; 
+            padding:15px 18px; 
+            display:flex; 
+            align-items:center; 
+            gap:10px; 
+            font-size:20px; 
+            font-weight:700; 
+            position:relative; 
+            overflow:hidden; 
+            z-index: 2;
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            font-family: 'Playfair Display', serif; /* Serif for headers */
+        }
+        .meal-header::before { 
+            content:''; 
+            position:absolute; 
+            top:0; 
+            left:0; 
+            right:0; 
+            bottom:0; 
+            background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); 
+            animation:shimmer 2.5s infinite; /* Slower shimmer */
+            z-index: -1;
+        }
+        @keyframes shimmer { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
+        .meal-header i {
+            font-size: 22px;
+            background: linear-gradient(135deg, #DAA520, #FFD700); /* Gold */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .meal-header.lunch { 
+            background: linear-gradient(135deg, #FFF8DC 0%, #F0E68C 50%, #DAA520 100%); /* Lighter gold for lunch */
+            color:#8B4513; 
+        }
+        .meal-header.lunch i {
+            background: linear-gradient(135deg, #FFD700, #B8860B); /* Brighter gold */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .meal-header.dinner { 
+            background: linear-gradient(135deg, #F5F5DC 0%, #DEB887 50%, #CD853F 100%); /* Warmer darker champagne */
+            color:#8B4513; 
+        }
+        .meal-header.dinner i {
+            background: linear-gradient(135deg, #DAA520, #B8860B); /* Darker gold */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dishes-container { padding:18px; display:grid; grid-template-columns: repeat(2, 1fr); gap:18px; position: relative; z-index: 3; }
+        .dish-category { display:flex; flex-direction:column; }
+        .category-title { 
+            font-size:16px; 
+            font-weight:700; 
+            color:#8B4513; 
+            margin-bottom:12px; 
+            padding-bottom:8px; 
+            border-bottom:2px solid #DAA520; /* Gold border */
+            text-align:center; 
+            position:relative; 
+            letter-spacing:0.5px; 
+            background:linear-gradient(135deg, #DAA520, #FFD700); /* Gold gradient */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Playfair Display', serif; /* Serif for category titles */
+        }
+        .category-title::after { 
+            content:''; 
+            position:absolute; 
+            bottom:-2px; 
+            left:50%; 
+            transform:translateX(-50%); 
+            width:25px; 
+            height:2px; 
+            background:#B8860B; /* Darker gold */
+            border-radius:1px; 
+        }
+        .dish-item {
+            display:flex; 
+            justify-content:space-between; 
+            align-items:center; 
+            padding:12px; 
+            border-radius:15px; 
+            background:rgba(255,248,220,0.98); /* Warmer background */
+            margin-bottom:12px;
+            box-shadow:0 5px 20px rgba(0,0,0,0.15); 
+            border:1px solid rgba(218,165,32,0.4); /* Stronger border */
+            transition:all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            height:60px; 
+            width:100%; 
+            position:relative; 
+            overflow:hidden;
+        }
+        .dish-item::before { 
+            content:''; 
+            position:absolute; 
+            top:0; 
+            left:0; 
+            right:0; 
+            height:100%; 
+            background:linear-gradient(90deg, transparent, rgba(218,165,32,0.12), transparent); /* Enhanced shimmer */
+            opacity:0; 
+            transition:opacity 0.4s; 
+            z-index: -1;
+        }
+        .dish-item:hover { 
+            transform:translateY(-5px) scale(1.04); /* More pronounced scale */
+            box-shadow:0 12px 35px rgba(0,0,0,0.2); 
+            border-color:#DAA520; 
+        }
+        .dish-item:hover::before { opacity:1; }
+        .dish-info { display:flex; align-items:center; gap:10px; flex:1; overflow:hidden; }
+        .dish-icon { 
+            width:28px; 
+            height:28px; 
+            background:linear-gradient(135deg, #DAA520, #F5DEB3, #FFD700); /* Gold gradient */
+            border-radius:50%; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            color:#8B4513; 
+            font-size:12px; 
+            flex-shrink:0; 
+            box-shadow:0 3px 10px rgba(218,165,32,0.6); /* Stronger shadow */
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        .dish-name { 
+            font-size:15px; 
+            font-weight:600; 
+            color:#8B4513; 
+            white-space:nowrap; 
+            overflow:hidden; 
+            text-overflow:ellipsis; 
+            background:linear-gradient(135deg, #8B4513, #DAA520); /* Dark to gold */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quantity-selector { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+        .qty-btn {
+            width:24px; 
+            height:24px; 
+            border-radius:50%; 
+            border:none; 
+            background:linear-gradient(135deg, #F5DEB3, #DEB887, #FFD700); /* Warmer gradient */
+            color:#8B4513; 
+            font-size:14px; 
+            font-weight:700;
+            cursor:pointer; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            box-shadow:0 3px 10px rgba(218,165,32,0.5);
+            font-family: 'Inter', sans-serif;
+        }
+        .qty-btn:hover { 
+            background:linear-gradient(135deg, #DEB887, #B8860B, #DAA520); 
+            transform:scale(1.15) rotate(10deg); 
+            box-shadow:0 5px 15px rgba(218,165,32,0.6); 
+            color:#654321;
+        }
+        .qty-btn:active { transform:scale(0.9); }
+        .qty-display { 
+            width:30px; 
+            text-align:center; 
+            font-size:14px; 
+            font-weight:700; 
+            color:#8B4513; 
+            background:linear-gradient(135deg, rgba(218,165,32,0.4), rgba(255,215,0,0.4)); /* Stronger tint */
+            border-radius:6px; 
+            padding:3px; 
+            box-shadow:inset 0 1px 3px rgba(0,0,0,0.1);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .order-summary { 
+            background:linear-gradient(135deg, rgba(255,248,220,0.98) 0%, rgba(245,222,179,0.98) 100%); /* Warmer, opaque */
+            color:#8B4513; 
+            padding:18px; 
+            border-radius:20px; 
+            margin-top:20px; 
+            border:1px solid rgba(218,165,32,0.5); /* Stronger border */
+            box-shadow:0 8px 25px rgba(218,165,32,0.25); /* Enhanced gold shadow */
+            position:relative;
+            z-index: 2;
+        }
+        .order-summary::before {
+            content: '\f0b0';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #DAA520, #FFD700); /* Gold */
+            color: #8B4513;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            box-shadow: 0 2px 8px rgba(218,165,32,0.3);
+        }
+        .summary-header { 
+            display:flex; 
+            justify-content:space-between; 
+            margin-bottom:15px; 
+            font-size:20px; 
+            font-weight:700; 
+            letter-spacing:0.5px; 
+            background:linear-gradient(135deg, #8B4513, #DAA520); /* Dark to gold */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Playfair Display', serif;
+        }
+        .summary-items { max-height:140px; overflow-y:auto; margin-bottom:15px; }
+        .summary-section-header {
+            font-size:16px;
+            font-weight:700;
+            color:#DAA520;
+            margin:10px 0 5px 0;
+            padding-bottom:5px;
+            border-bottom:1px solid rgba(218,165,32,0.5);
+            font-family: 'Playfair Display', serif;
+        }
+        .summary-item { 
+            display:flex; 
+            justify-content:space-between; 
+            padding:10px 0; 
+            border-bottom:1px solid rgba(139,69,19,0.25); /* Slightly darker */
+            font-size:14px; 
+            transition:all 0.3s; 
+            background:rgba(255,248,220,0.8); /* Warmer ivory */
+            margin-bottom:5px;
+            border-radius:8px;
+            padding:8px 12px;
+            font-family: 'Inter', sans-serif;
+        }
+        .summary-item:hover { 
+            color:#654321; 
+            transform:translateX(5px);
+            box-shadow:0 3px 12px rgba(218,165,32,0.25); /* Enhanced hover */
+        }
+        .summary-item:last-child { border-bottom:none; }
+
+        .submit-btn {
+            width:100%; 
+            padding:16px; 
+            background: linear-gradient(135deg, #F5DEB3 0%, #DEB887 50%, #DAA520 100%); /* Warmer champagne to gold */
+            color:#8B4513; 
+            border:none; 
+            border-radius:15px;
+            font-size:18px; 
+            font-weight:700; 
+            cursor:pointer; 
+            margin-top:18px; 
+            transition:all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            gap:10px;
+            box-shadow:0 10px 30px rgba(218,165,32,0.35); /* Enhanced shadow */
+            border:1px solid rgba(218,165,32,0.5); 
+            position:relative; 
+            overflow:hidden;
+            z-index: 2;
+            font-family: 'Playfair Display', serif; /* Serif for button */
+        }
+        .submit-btn::before { 
+            content:''; 
+            position:absolute; 
+            top:50%; 
+            left:50%; 
+            width:0; 
+            height:0; 
+            background:linear-gradient(45deg, #DAA520, #FFD700, #B8860B); /* Gold ripple */
+            border-radius:50%; 
+            transition:all 0.6s; 
+            transform:translate(-50%, -50%); 
+        }
+        .submit-btn:hover { 
+            background: linear-gradient(135deg, #DEB887 0%, #B8860B 50%, #CD853F 100%); /* Warmer darker hover */
+            transform:translateY(-4px) scale(1.02); 
+            box-shadow:0 15px 40px rgba(218,165,32,0.45); 
+            color:#654321; 
+        }
+        .submit-btn:hover::before { width:300px; height:300px; }
+        .submit-btn:active { transform:translateY(-2px); }
+
+        /* Enhanced floating particles for better theme - golden sparkles with varied sizes and slower animation */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #FFD700, transparent),
+                radial-gradient(1.5px 1.5px at 40px 70px, rgba(255,215,0,0.9), transparent),
+                radial-gradient(0.8px 0.8px at 90px 40px, #DAA520, transparent),
+                radial-gradient(1.2px 1.2px at 130px 80px, rgba(218,165,32,0.7), transparent),
+                radial-gradient(2.5px 2.5px at 160px 30px, #FFD700, transparent),
+                radial-gradient(3px 3px at 200px 50px, #B8860B, transparent),
+                radial-gradient(1px 1px at 250px 90px, rgba(255,215,0,0.6), transparent);
+            background-repeat: repeat;
+            background-size: 300px 150px;
+            animation: sparkle 25s linear infinite; /* Even slower for luxury feel */
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes sparkle {
+            from { transform: translateY(0px) rotate(0deg); }
+            to { transform: translateY(-150px) rotate(360deg); }
+        }
+
+        /* Enhanced glow to sections for premium theme */
+        .meal-section {
+            filter: drop-shadow(0 0 12px rgba(218, 165, 32, 0.25));
+        }
+        .meal-section:hover {
+            filter: drop-shadow(0 0 25px rgba(218, 165, 32, 0.35));
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            font-family: 'Inter', sans-serif;
+        }
+        .toast.show {
+            display: block;
+            animation: toastSlideIn 0.5s ease;
+        }
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width:768px) {
+            body { padding:3px; }
+            .container { height:100vh; border-radius:12px; }
+            .day-tab { min-width:60px; font-size:11px; padding:10px 6px; }
+            .day-content { padding:12px; }
+            .day-title { font-size:20px; margin-bottom:15px; }
+            .dishes-container { padding:10px; gap:10px; grid-template-columns: 1fr; }
+            .dish-item { flex-direction:row; align-items:center; gap:10px; padding:8px; height:50px; }
+            .dish-name { font-size:13px; }
+            .qty-btn { width:20px; height:20px; font-size:11px; }
+            .qty-display { width:22px; font-size:12px; }
+            .meal-header { font-size:15px; padding:10px 12px; }
+            .category-title { font-size:14px; }
+            .summary-item { font-size:12px; }
+            .submit-btn { font-size:14px; padding:12px; }
+            .name-input-container { flex-direction:column; gap:6px; padding:10px; }
+            .name-input-container label { font-size:14px; }
+            #customer-name { min-width:auto; width:100%; font-size:14px; }
+            .header-actions { flex-direction:column; gap:10px; }
+            .view-db-btn { justify-content:center; width:100%; }
+            .toast { bottom: 10px; right: 10px; left: 10px; width: auto; }
+        }
+
+        /* make an accessible focus state with glow */
+        .qty-btn:focus, .submit-btn:focus, .day-tab:focus, .view-db-btn:focus { 
+            outline:3px solid rgba(218,165,32,0.6); 
+            outline-offset:2px; 
+            box-shadow:0 0 0 3px rgba(218,165,32,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class=""></i>
+				<span><img src="https://i.postimg.cc/HLj8yRyp/panchgani-removebg-preview.png" height="100"></span>
+                <span><img src="https://i.postimg.cc/CMttfwC3/fmb.png" height="100"></span>
+				
+            </div>
+
+            <div class="name-input-container" style="margin-top:12px;">
+                <label for="customer-name">Name:</label>
+                <input type="text" id="customer-name" placeholder="Enter your name" autocomplete="on">
+            </div>
+
+            <div class="header-actions">
+                <!-- View Orders Database button - opens the Google Sheet -->
+                
+<button id="view-db-link" class="view-db-btn" type="button" aria-haspopup="dialog" aria-controls="db-password-modal" data-href="https://docs.google.com/spreadsheets/d/1E_Um7247eCREoxiXttCCd76xRgFB6nMCf3bzzMrNch0/edit">
+    
+                    <i class="fas fa-database"></i>
+                    View Orders Database
+                
+</button>
+
+            </div>
+        </header>
+
+        <div class="days-tabs">
+            <button class="day-tab active" data-day="monday">Monday</button>
+            <button class="day-tab" data-day="tuesday">Tuesday</button>
+            <button class="day-tab" data-day="wednesday">Wednesday</button>
+            <button class="day-tab" data-day="thursday">Thursday</button>
+            <button class="day-tab" data-day="friday">Friday</button>
+            <button class="day-tab" data-day="saturday">Saturday</button>
+            <button class="day-tab" data-day="sunday">Sunday</button>
+        </div>
+
+        <div class="content-area">
+            <!-- Each day-content block contains the menu for that day.
+                 Keep the same structure as your original file - all dish-items have a .dish-name and .qty-display -->
+            <!-- Monday -->
+            <div class="day-content active" id="monday">
+                <video class="day-bg" autoplay loop muted playsinline style="opacity: 0.03;">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                </video>
+                <h2 class="day-title">Monday's Special</h2>
+
+                <div class="meal-section lunch">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header lunch"><i class="fas fa-sun"></i><span>LUNCH</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Main Dish(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-utensils"></i></div><div class="dish-name">CHICKEN PASTA</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Salad(per pkt)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-leaf"></i></div><div class="dish-name">KURKURE SALAD</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Fruits(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-apple-alt"></i></div><div class="dish-name">ANY</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+                <div class="meal-section dinner">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-full-moon-night-sky-3276-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header dinner"><i class="fas fa-moon"></i><span>DINNER</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Sweet</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-cookie"></i></div><div class="dish-name">RABDI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Starter(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-pepper-hot"></i></div><div class="dish-name">GILKI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name">Roti</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHAWAL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+						<div class="dish-category">
+                            <div class="category-title">Gravy(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">MASOOR DAL </div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-header"><span>Order Summary</span><span>Monday</span></div>
+                    <div class="summary-items" id="monday-summary"></div>
+                </div>
+
+                <button class="submit-btn" data-day="monday"><i class="fas fa-paper-plane"></i>Submit</button>
+            </div>
+
+            <!-- Tuesday -->
+            <div class="day-content" id="tuesday">
+                <video class="day-bg" autoplay loop muted playsinline style="opacity: 0.03;">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                </video>
+                <h2 class="day-title">Tuesday's Special</h2>
+
+                <div class="meal-section lunch">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header lunch"><i class="fas fa-sun"></i><span>LUNCH</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Main Dish(per pkt)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-utensils"></i></div><div class="dish-name">PANI PURI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Salad(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-leaf"></i></div><div class="dish-name">BHEL SALAD</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Fruits(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-apple-alt"></i></div><div class="dish-name">ANY</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+                <div class="meal-section dinner">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-full-moon-night-sky-3276-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header dinner"><i class="fas fa-moon"></i><span>DINNER</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Sweet</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-cookie"></i></div><div class="dish-name">DUDHI HALWA</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Starter(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-pepper-hot"></i></div><div class="dish-name">DABBA GOSHT</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name">Roti</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHICKEN BIRYANI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+						<div class="dish-category">
+                            <div class="category-title">Soup(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">ALMOND SOUP</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-header"><span>Order Summary</span><span>Tuesday </span></div>
+                    <div class="summary-items" id="tuesday-summary"></div>
+                </div>
+
+                <button class="submit-btn" data-day="tuesday"><i class="fas fa-paper-plane"></i> Submit</button>
+            </div>
+
+            <!-- Wednesday -->
+            <div class="day-content" id="wednesday">
+                <video class="day-bg" autoplay loop muted playsinline style="opacity: 0.03;">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                </video>
+                <h2 class="day-title">Wednesday's Special</h2>
+
+                <div class="meal-section lunch">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header lunch"><i class="fas fa-sun"></i><span>LUNCH</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Main Dish(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-utensils"></i></div><div class="dish-name">CHICKEN PETI BURGER</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Salad(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-leaf"></i></div><div class="dish-name">FRENCH FRIES</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Fruits</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-apple-alt"></i></div><div class="dish-name">ANY</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+                <div class="meal-section dinner">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-full-moon-night-sky-3276-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header dinner"><i class="fas fa-moon"></i><span>DINNER</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Sweet</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-cookie"></i></div><div class="dish-name">CARAMEL PUDDING</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Starter(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-pepper-hot"></i></div><div class="dish-name">BHINDI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name">Roti</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHAWAL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+						<div class="dish-category">
+                            <div class="category-title">Gravy(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">TADKA DAL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-header"><span>Order Summary</span><span>Wednesday</span></div>
+                    <div class="summary-items" id="wednesday-summary"></div>
+                </div>
+
+                <button class="submit-btn" data-day="wednesday"><i class="fas fa-paper-plane"></i>Submit</button>
+            </div>
+
+            <!-- Thursday -->
+            <div class="day-content" id="thursday">
+                <video class="day-bg" autoplay loop muted playsinline style="opacity: 0.03;">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                </video>
+                <h2 class="day-title">Thurdays's Special</h2>
+
+                <div class="meal-section lunch">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header lunch"><i class="fas fa-sun"></i><span>LUNCH</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Main Dish(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-utensils"></i></div><div class="dish-name">PAV BHAJI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Salad(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-leaf"></i></div><div class="dish-name">SHRIKHAND</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Fruits</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-apple-alt"></i></div><div class="dish-name">ANY</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+                <div class="meal-section dinner">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-full-moon-night-sky-3276-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header dinner"><i class="fas fa-moon"></i><span>DINNER</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Sweet</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-cookie"></i></div><div class="dish-name">KHEER</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Starter(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-pepper-hot"></i></div><div class="dish-name">VEG RUSSIAN CUTLETS</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name">Butter Naan</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHAWAL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+						<div class="dish-category">
+                            <div class="category-title">GRAVY(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHICKEN DO PYAZA</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-header"><span>Order Summary</span><span>Thursday</span></div>
+                    <div class="summary-items" id="thursday-summary"></div>
+                </div>
+
+                <button class="submit-btn" data-day="thursday"><i class="fas fa-paper-plane"></i> Submit</button>
+            </div>
+
+            <!-- Friday -->
+            <div class="day-content" id="friday">
+                <video class="day-bg" autoplay loop muted playsinline style="opacity: 0.03;">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                </video>
+                <h2 class="day-title">Friday's Special</h2>
+
+                <div class="meal-section lunch">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header lunch"><i class="fas fa-sun"></i><span>LUNCH</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Main Dish(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-utensils"></i></div><div class="dish-name">GREEN CHICKEN ROLL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Salad(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-leaf"></i></div><div class="dish-name">RAGDA PETIS</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Fruits</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-apple-alt"></i></div><div class="dish-name">ANY</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+                <div class="meal-section dinner">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-full-moon-night-sky-3276-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header dinner"><i class="fas fa-moon"></i><span>DINNER</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Sweet</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-cookie"></i></div><div class="dish-name">SUJI HALWA</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Starter(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-pepper-hot"></i></div><div class="dish-name">PALAK BHAJI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name"> Naan</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHAWAL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+						<div class="dish-category">
+                            <div class="category-title">Gravy(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">DAL GOSHT </div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-header"><span>Order Summary</span><span>Friday</span></div>
+                    <div class="summary-items" id="friday-summary"></div>
+                </div>
+
+                <button class="submit-btn" data-day="friday"><i class="fas fa-paper-plane"></i> Submit</button>
+            </div>
+
+            <!-- Saturday -->
+            <div class="day-content" id="saturday">
+                <video class="day-bg" autoplay loop muted playsinline style="opacity: 0.03;">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                </video>
+                <h2 class="day-title">Saturday's Special</h2>
+
+                <div class="meal-section lunch">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header lunch"><i class="fas fa-sun"></i><span>LUNCH</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Main Dish(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-utensils"></i></div><div class="dish-name">VADA PAV</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Salad(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-leaf"></i></div><div class="dish-name">CHIPS</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Fruits</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-apple-alt"></i></div><div class="dish-name">ANY</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+                <div class="meal-section dinner">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-full-moon-night-sky-3276-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header dinner"><i class="fas fa-moon"></i><span>DINNER</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Sweet</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-cookie"></i></div><div class="dish-name">SHAHI TUKDA</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Starter(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-pepper-hot"></i></div><div class="dish-name">BUTTER CHICKEN</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name">BUTTER NAN</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHAWAL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-header"><span>Order Summary</span><span>Saturday</span></div>
+                    <div class="summary-items" id="saturday-summary"></div>
+                </div>
+
+                <button class="submit-btn" data-day="saturday"><i class="fas fa-paper-plane"></i>Submit</button>
+            </div>
+
+            <!-- Sunday -->
+            <div class="day-content" id="sunday">
+                <video class="day-bg" autoplay loop muted playsinline style="opacity: 0.03;">
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                </video>
+                <h2 class="day-title">Sunday's Special</h2>
+
+                <div class="meal-section lunch">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sunrise-in-nature-1121-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header lunch"><i class="fas fa-sun"></i><span>LUNCH</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Main Dish(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-utensils"></i></div><div class="dish-name">CHICKEN AFGHANI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name">ROTI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHAWAL</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Drink</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-wine-bottle"></i></div><div class="dish-name">ROSE DOODH</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section dinner">
+                    <video autoplay loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-full-moon-night-sky-3276-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="meal-header dinner"><i class="fas fa-moon"></i><span>DINNER</span></div>
+                    <div class="dishes-container">
+                        <div class="dish-category">
+                            <div class="category-title">Sweet</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-cookie"></i></div><div class="dish-name">ICE CREAM</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Starter(per bowl)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-pepper-hot"></i></div><div class="dish-name">MURG MUSALLAM</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Roti(per unit)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bread-slice"></i></div><div class="dish-name">ROTI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+
+                        <div class="dish-category">
+                            <div class="category-title">Rice(per plate)</div>
+                            <div class="dish-item"><div class="dish-info"><div class="dish-icon"><i class="fas fa-bowl-rice"></i></div><div class="dish-name">CHICKEN SHANGHAI</div></div><div class="quantity-selector"><button class="qty-btn minus">-</button><div class="qty-display">0</div><button class="qty-btn plus">+</button></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-header"><span>Order Summary</span><span>Sunday</span></div>
+                    <div class="summary-items" id="sunday-summary"></div>
+                </div>
+
+                <button class="submit-btn" data-day="sunday"><i class="fas fa-paper-plane"></i>Submit</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Order Delivered</div>
+
+    
+<script>
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSU2DvQ7i7QHrsEnXHVPCAKBsT2EP1mMD-5zFtTip5P9mMXYNUkFbRd0kHUKYRCKf8/exec";
+
+function getCurrentDay() {
+  const activeTab = document.querySelector('.day-tab.active');
+  return activeTab ? activeTab.dataset.day : 'monday';
+}
+
+function updateSummary(day) {
+  const summaryDiv = document.getElementById(day + '-summary');
+  if (!summaryDiv) return;
+  summaryDiv.innerHTML = '';
+  const dayContent = document.getElementById(day);
+  if (!dayContent) return;
+
+  const lunchItems = [];
+  const dinnerItems = [];
+
+  // Lunch items
+  dayContent.querySelectorAll('.meal-section.lunch .dish-item').forEach(item => {
+    const qtyDisplay = item.querySelector('.qty-display');
+    const qty = parseFloat(qtyDisplay.textContent) || 0;
+    if (qty > 0) {
+      const name = item.querySelector('.dish-name').textContent.trim();
+      lunchItems.push({ name, quantity: qty, mealType: "lunch" });
+    }
+  });
+
+  // Dinner items
+  dayContent.querySelectorAll('.meal-section.dinner .dish-item').forEach(item => {
+    const qtyDisplay = item.querySelector('.qty-display');
+    const qty = parseFloat(qtyDisplay.textContent) || 0;
+    if (qty > 0) {
+      const name = item.querySelector('.dish-name').textContent.trim();
+      dinnerItems.push({ name, quantity: qty, mealType: "dinner" });
+    }
+  });
+
+  if (lunchItems.length > 0) {
+    const lunchHeader = document.createElement('div');
+    lunchHeader.className = 'summary-section-header';
+    lunchHeader.innerHTML = '<i class="fas fa-sun"></i> Lunch';
+    summaryDiv.appendChild(lunchHeader);
+    lunchItems.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'summary-item';
+      const qtyStr = (item.quantity % 1 === 0) ? item.quantity.toString() : item.quantity.toFixed(1);
+      itemDiv.innerHTML = `<span>${item.name} x ${qtyStr}</span><span></span>`;
+      summaryDiv.appendChild(itemDiv);
+    });
+  }
+
+  if (dinnerItems.length > 0) {
+    const dinnerHeader = document.createElement('div');
+    dinnerHeader.className = 'summary-section-header';
+    dinnerHeader.innerHTML = '<i class="fas fa-moon"></i> Dinner';
+    summaryDiv.appendChild(dinnerHeader);
+    dinnerItems.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'summary-item';
+      const qtyStr = (item.quantity % 1 === 0) ? item.quantity.toString() : item.quantity.toFixed(1);
+      itemDiv.innerHTML = `<span>${item.name} x ${qtyStr}</span><span></span>`;
+      summaryDiv.appendChild(itemDiv);
+    });
+  }
+}
+
+// Handle tab switching
+document.querySelectorAll('.day-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.day-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    const day = this.dataset.day;
+    document.getElementById(day).classList.add('active');
+    updateSummary(day);
+  });
+});
+
+// Handle quantity buttons
+document.querySelectorAll('.qty-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const display = this.parentElement.querySelector('.qty-display');
+    let current = parseFloat(display.textContent) || 0;
+    if (this.classList.contains('plus')) {
+      current += 0.5;
+    }
+    if (this.classList.contains('minus') && current > 0) {
+      current -= 0.5;
+    }
+    if (current < 0) current = 0;
+    const qtyStr = (current % 1 === 0) ? current.toString() : current.toFixed(1);
+    display.textContent = qtyStr;
+    const currentDay = getCurrentDay();
+    updateSummary(currentDay);
+  });
+});
+
+// Handle submit for each day
+document.querySelectorAll('.submit-btn').forEach(button => {
+  button.addEventListener('click', async function() {
+    const day = this.dataset.day;
+    const name = document.getElementById('customer-name').value.trim();
+    if (!name) {
+      alert('Please enter your name before submitting.');
+      return;
+    }
+
+    const dayContent = document.getElementById(day);
+    const items = [];
+
+    // Lunch items
+    dayContent.querySelectorAll('.meal-section.lunch .dish-item').forEach(item => {
+      const qtyDisplay = item.querySelector('.qty-display');
+      const qty = parseFloat(qtyDisplay.textContent) || 0;
+      if (qty > 0) {
+        items.push({
+          name: item.querySelector('.dish-name').textContent.trim(),
+          quantity: qty,
+          mealType: "lunch"
+        });
+      }
+    });
+
+    // Dinner items
+    dayContent.querySelectorAll('.meal-section.dinner .dish-item').forEach(item => {
+      const qtyDisplay = item.querySelector('.qty-display');
+      const qty = parseFloat(qtyDisplay.textContent) || 0;
+      if (qty > 0) {
+        items.push({
+          name: item.querySelector('.dish-name').textContent.trim(),
+          quantity: qty,
+          mealType: "dinner"
+        });
+      }
+    });
+
+    if (items.length === 0) {
+      alert("Please select at least one dish before submitting.");
+      return;
+    }
+
+    const data = { name, day, items };
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flick.ogg");
+      audio.play();
+
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance('Order delivered');
+        utterance.rate = 2; // Fast speaking rate
+        speechSynthesis.speak(utterance);
+      }
+
+      dayContent.querySelectorAll('.qty-display').forEach(d => d.textContent = "0");
+      updateSummary(day);
+    } catch (error) {
+      alert("Error submitting order. Please try again.");
+      console.error(error);
+    }
+  });
+});
+
+// Initial summary update
+updateSummary('monday');
+</script>
+
+
+<!-- Password modal for View Orders Database -->
+<div id="db-password-modal" class="db-modal" role="dialog" aria-modal="true" aria-labelledby="db-modal-title" style="display:none;">
+  <div class="db-modal-overlay" id="db-modal-overlay"></div>
+  <div class="db-modal-content" role="document" style="max-width:420px;padding:20px;border-radius:12px;background:rgba(255,255,255,0.98);box-shadow:0 20px 40px rgba(0,0,0,0.25);position:fixed;left:50%;top:45%;transform:translate(-50%,-50%);z-index:2000;">
+    <h3 id="db-modal-title" style="margin:0 0 10px 0;font-family:Inter, sans-serif;color:#8B4513;">Protected: View Orders</h3>
+    <p style="margin:0 0 12px 0;color:#654321;font-size:14px;">Enter the password to open the orders database.</p>
+    <label for="db-password-input" style="display:block;margin-bottom:8px;color:#8B4513;font-weight:600;">Password</label>
+    <input id="db-password-input" type="password" autocomplete="current-password" style="width:100%;padding:10px;border-radius:8px;border:1px solid #DEB887;margin-bottom:12px;font-size:15px;" />
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button id="db-cancel-btn" type="button" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(139,69,19,0.15);background:transparent;cursor:pointer;">Cancel</button>
+      <button id="db-unlock-btn" type="button" style="padding:8px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#DEB887,#DAA520);color:#8B4513;cursor:pointer;font-weight:700;">Unlock</button>
+    </div>
+    <p id="db-modal-error" style="color:#b00020;margin-top:12px;display:none;font-size:14px;"></p>
+  </div>
+</div>
+
+<style>
+  /* Minimal modal overlay style */
+  .db-modal { }
+  .db-modal-overlay { position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:1999; }
+</style>
+
+<script>
+(function(){
+  // Change this password to whatever you prefer.
+  const PASSWORD = "admin123"; // <-- set your password here (client-side only)
+  const viewBtn = document.getElementById("view-db-link");
+  if (!viewBtn) return;
+
+  const modal = document.getElementById("db-password-modal");
+  const overlay = document.getElementById("db-modal-overlay");
+  const input = document.getElementById("db-password-input");
+  const unlockBtn = document.getElementById("db-unlock-btn");
+  const cancelBtn = document.getElementById("db-cancel-btn");
+  const errP = document.getElementById("db-modal-error");
+
+  function openModal() {
+    input.value = "";
+    errP.style.display = "none";
+    modal.style.display = "block";
+    input.focus();
+    document.addEventListener("keydown", onKeyDown);
+  }
+
+  function closeModal() {
+    modal.style.display = "none";
+    document.removeEventListener("keydown", onKeyDown);
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "Escape") closeModal();
+    if (e.key === "Enter") attemptUnlock();
+  }
+
+  function attemptUnlock() {
+    const typed = input.value || "";
+    if (typed === PASSWORD) {
+      // open the original href saved in data-href
+      const target = viewBtn.getAttribute("data-href") || viewBtn.getAttribute("href");
+      // close modal first for a smoother UX
+      closeModal();
+      // open in a new tab/window
+      window.open(target, "_blank", "noopener");
+    } else {
+      errP.textContent = "Incorrect password. Please try again.";
+      errP.style.display = "block";
+      input.focus();
+    }
+  }
+
+  // Prevent accidental navigation when original element was an anchor with href
+  viewBtn.addEventListener("click", function(e){
+    e.preventDefault();
+    openModal();
+  });
+
+  unlockBtn.addEventListener("click", attemptUnlock);
+  cancelBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", closeModal);
+})();
+</script>
+
+</body>
+</html>
